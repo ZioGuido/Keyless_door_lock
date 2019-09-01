@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////
-// Keyless StandAlone - sistem to open/close doors unsing a gearmotor
+// Keyless StandAlone - system to open/close doors unsing a gearmotor
 // Controls MICROMOTORS E192-2S.12.49 through power driver L6201 @ 12V.
 // Runs on ATMega328P (Duemilanove, DUE, or similar boards)
 // 
