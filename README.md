@@ -2,7 +2,7 @@
 Arduino project to control a motorized door lock
 
 (Scroll below for a short english description)
-ITALIANO
+###### ITALIANO
 
 Nell'aprile del 2017 ho fatto installare, alla porta d'ingresso del mio ufficio, una serratura motorizzata con annesso sistema di controllo 
 prodotto da un'azienda di Treviso specializzata in questo tipo di serrature "keyless", ovvero che si possono usare senza chiavi, 
@@ -24,7 +24,7 @@ ricavato uno schema dei collegamenti e ho deciso di scrivere io stesso un nuovo 
 prodotto originale.
 
 I collegamenti della scheda ProMini sono i seguenti:
-
+```
 PIN
 12      L6201 In 1
 11      L6201 In 2
@@ -37,8 +37,9 @@ PIN
 8       Jumper "Error yes"
 6       Jumper "Reset"
 7       LED "ok"
+```
 
-FUNZIONAMENTO
+###### FUNZIONAMENTO
 
 Alla prima accensione è necessario effettuare la taratura per conoscere le corse da effettuare per bloccare/sbloccare la porta o
 aprire e rilasciare lo scrocco. Per far ciò, dopo aver montato la serratura e il motore ed effettuato i collegamenti, 
@@ -59,7 +60,7 @@ Se il jumper "Error yes" viene rimosso, la serratura si richiuderà nel caso in 
 jumper inserito, il motore interrompe il movimento se incontra un ostacolo.
 
 
-ENGLISH
+###### ENGLISH
 
 This project controls a motorized door lock. It's a complete re-write of an italian commercial product that is now obsolete and 
 unsupported. It controls a 12V gearmotor MICROMOTORS E192-2S.12.49 through a power driver L6201P and uses a reed switch to sense the
