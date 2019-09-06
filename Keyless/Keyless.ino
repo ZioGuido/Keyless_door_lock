@@ -32,6 +32,7 @@
 #define PIN_LED_OK         7    // Blinks to indicates normal operation
 
 // Other definitions
+#define MOTOR_OFFSET      8     // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
 #define MOTOR_TIMEOUT     250   // Milliseconds to wait when an obstacle is found during motor movement before stopping the rotation
 #define SECURITY_TIMEOUT  3000  // Milliseconds to wait until the port is open after pushing the button, otherwise close or lock again
 #define CLOSE_WAIT        1500  // Milliseconds to wait before starting the close direction
@@ -40,8 +41,6 @@
 #define EEPROM_LOC_LAST   64    // Used to remember the last motor position after a power loss
 
 // Global variables
-int DayAndNight;                // Stores D&N switch status
-int DoorStatus;                 // Stores door sensor value
 int MotorIsMoving;              // Stores the motor status
 volatile int MotorCounter;      // This is updated in an ISR
 int PrevCounter;                // This is used to check that the motor is actually spinning
@@ -49,7 +48,6 @@ unsigned long ObstacleTimeout;  // A timeout to check if an obstacle is stopping
 unsigned long SecurityTimeout;  // To release or re-lock if the button is pushed but the door isn't open
 int RequestedPulses;            // This variable is reassigned according to the amount of pulses to wait before stopping the motor
 int CurrentMotorPosition;       // Tells the current motor position (see enum below)
-int PreviousMotorPosition;      // Remembers the previous motor position (see enum below)
 int LastOperation;              // Stores the last operation (see enum below)
 int CalibrationStep;            // Used during the self-calibration
 
@@ -94,7 +92,7 @@ void StartMotor()
 
   case opLock:
     // Don't lock door if it's open
-    delay(LOCK_WAIT); if (DoorStatus) return;
+    delay(LOCK_WAIT); if (digitalRead(PIN_SENSOR) == HIGH) return;
     
     Serial.println("Operation: LOCK");
     motor_direction = dirClose;
@@ -138,8 +136,6 @@ void StopMotor()
   // Disable motor driver after 100 milliseconds
   delay(100);
   digitalWrite(PIN_MOTOR_ENABLE, 0);
-
-  PreviousMotorPosition = CurrentMotorPosition;
 
   switch(LastOperation)
   {
@@ -189,7 +185,7 @@ void StopByObstacle()
     return;
 
   case calClose:
-    configuration.len_close = MotorCounter;
+    configuration.len_close = MotorCounter - MOTOR_OFFSET;
     CalibrationStep = calFinish;
     DoCalibration();
     return;
@@ -290,7 +286,6 @@ void setup()
   StopMotor();
   attachInterrupt(digitalPinToInterrupt(PIN_MOTOR_HALL), GetEncoder, FALLING);
   CurrentMotorPosition = EEPROM.read(EEPROM_LOC_LAST);
-  PreviousMotorPosition = CurrentMotorPosition;
 
   // If the Jumper RESET is removed at boot, do the self-calibration
   CalibrationStep = calNothing;
@@ -304,10 +299,6 @@ void setup()
 
 void loop()
 {
-  // Read inputs
-  DoorStatus        = digitalRead(PIN_SENSOR);      // LOW = door is closed
-  DayAndNight       = digitalRead(PIN_DAYNIGHT);    // HIGH = keep the door locked
-
   if (MotorIsMoving)
   {
     // Check that the motor is spinning
@@ -335,7 +326,7 @@ void loop()
     }
 
     // Lock if motor is in released position, D&N is on, door is close
-    if (CurrentMotorPosition == posReleased && DayAndNight == HIGH && DoorStatus == LOW)
+    if (CurrentMotorPosition == posReleased && digitalRead(PIN_DAYNIGHT) == HIGH && digitalRead(PIN_SENSOR) == LOW)
     {
       LastOperation = opLock;
       StartMotor();
@@ -345,7 +336,7 @@ void loop()
     if (CurrentMotorPosition == posOpen)
     {
       // Release after opening when the door is actually open
-      if (DoorStatus == HIGH)
+      if (digitalRead(PIN_SENSOR) == HIGH)
       {
         LastOperation = opRelease;
         StartMotor();
@@ -356,7 +347,7 @@ void loop()
         // Close or lock door if the button has been pushed but the door hasn't been open within the specified TIMEOUT
         if (millis() - SecurityTimeout > SECURITY_TIMEOUT)
         {
-          LastOperation = DayAndNight ? opLock : opRelease;
+          LastOperation = digitalRead(PIN_DAYNIGHT) ? opLock : opRelease;
           StartMotor();
         }
       }
