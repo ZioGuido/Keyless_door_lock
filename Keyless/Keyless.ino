@@ -1,13 +1,13 @@
 /////////////////////////////////////////////////////////////////////////////////
-// Keyless StandAlone - system to open/close doors unsing a gearmotor
+// Keyless StandAlone - system to lock/unlock a door unsing a gearmotor
 // Controls MICROMOTORS E192-2S.12.49 through power driver L6201 @ 12V.
-// Runs on ATMega328P (Duemilanove, DUE, or similar boards)
+// Runs on ATMega328P (Duemilanove, UNO, or similar boards)
 //
 // Code By Guido Scognamiglio - https://github.com/ZioGuido
 // Last update: Sept 2019
 //
 // Notes on the gear-motor MICROMOTORS E192-2S.12.49:
-// The encode reads 3 pulses every complete motor revolution.
+// The encoder reads 3 pulses every complete motor revolution.
 // The gear ratio is 49,29:1 so every gearmotor revolution = 49,29 x 3 = 147,87 pulses.
 //
 // Notes on the L6201:
@@ -23,20 +23,20 @@
 #define PIN_J_ERROR_YES    8    // HIGH = disables motor operation in case of error
 #define PIN_J_NO_RELEASE  13    // HIGH = no release lock, LOW = release lock
 #define PIN_BUTTON         5    // Pushbutton to open door
-#define PIN_SENSOR         2    // Reed switch so sense door close/open
-#define PIN_DAYNIGHT       4    // LOW = lock door if close, HIGH = do nothing
+#define PIN_SENSOR         2    // Reed switch so sense door close/open status
+#define PIN_DAYNIGHT       4    // HIGH = lock door if close, LOW = do nothing
 #define PIN_MOTOR_ENABLE  10    // Controls L6201 operation
 #define PIN_MOTOR_1       12    // Motor
 #define PIN_MOTOR_2       11    // Motor
-#define PIN_MOTOR_HALL     3    // Hall sensor from motor encoder, to track motor revolutions
-#define PIN_LED_OK         7    // Blinks to indicates normal operation
+#define PIN_MOTOR_HALL     3    // Hall sensor from motor encoder, to count motor revolutions
+#define PIN_LED_OK         7    // Blinks to indicate normal operation
 
 // Other definitions
-#define MOTOR_OFFSET      8     // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
+#define MOTOR_OFFSET      10    // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
 #define MOTOR_TIMEOUT     250   // Milliseconds to wait when an obstacle is found during motor movement before stopping the rotation
-#define SECURITY_TIMEOUT  3000  // Milliseconds to wait until the port is open after pushing the button, otherwise close or lock again
+#define SECURITY_TIMEOUT  3000  // Milliseconds to wait until the door is open after pushing the button, otherwise close or lock again
 #define CLOSE_WAIT        1500  // Milliseconds to wait before starting the close direction
-#define LOCK_WAIT         1000  // Milliseconds to wait before locking the door
+#define LOCK_WAIT         1500  // Milliseconds to wait before locking the door
 #define EEPROM_LOC_CONF   0     // EEPROM location where to start read/write the configuration structure
 #define EEPROM_LOC_LAST   64    // Used to remember the last motor position after a power loss
 
@@ -130,7 +130,6 @@ void StopMotor()
 {
   digitalWrite(PIN_MOTOR_1, 0);
   digitalWrite(PIN_MOTOR_2, 0);
-
   MotorIsMoving = 0;
 
   // Disable motor driver after 100 milliseconds
