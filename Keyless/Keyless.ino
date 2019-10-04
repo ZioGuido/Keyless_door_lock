@@ -32,11 +32,11 @@
 #define PIN_LED_OK         7    // Blinks to indicate normal operation
 
 // Other definitions
-#define MOTOR_OFFSET      10    // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
-#define MOTOR_TIMEOUT     250   // Milliseconds to wait when an obstacle is found during motor movement before stopping the rotation
+#define MOTOR_OFFSET      100   // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
+#define MOTOR_TIMEOUT     200   // Milliseconds to wait when an obstacle is found during motor movement before stopping the rotation
 #define SECURITY_TIMEOUT  3000  // Milliseconds to wait until the door is open after pushing the button, otherwise close or lock again
-#define CLOSE_WAIT        1500  // Milliseconds to wait before starting the close direction
-#define LOCK_WAIT         1500  // Milliseconds to wait before locking the door
+#define CLOSE_WAIT        100   // Milliseconds to wait before starting the close direction
+#define LOCK_WAIT         2000  // Milliseconds to wait before locking the door
 #define EEPROM_LOC_CONF   0     // EEPROM location where to start read/write the configuration structure
 #define EEPROM_LOC_LAST   64    // Used to remember the last motor position after a power loss
 
@@ -237,6 +237,7 @@ void DoCalibration()
     CalibrationStep = calNothing;
     EEPROM.put(EEPROM_LOC_CONF, configuration);
     Serial.println("CALIBRATION TERMINATED");
+    digitalWrite(PIN_LED_OK, 0);
     return;
   }
 
@@ -252,6 +253,7 @@ void DoCalibration()
     digitalWrite(PIN_MOTOR_2, !motor_direction);
     if (motor_direction == dirClose) delay(CLOSE_WAIT);
     digitalWrite(PIN_MOTOR_ENABLE, 1);
+    digitalWrite(PIN_LED_OK, 1);
   }
 }
 
