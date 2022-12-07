@@ -4,7 +4,7 @@
 // Runs on ATMega328P (Duemilanove, UNO, or similar boards)
 //
 // Code By Guido Scognamiglio - https://github.com/ZioGuido
-// Last update: Sept 2019
+// Last update: Dec 2022
 //
 // Notes on the gear-motor MICROMOTORS E192-2S.12.49:
 // The encoder reads 3 pulses every complete motor revolution.
@@ -32,8 +32,8 @@
 #define PIN_LED_OK         7    // Blinks to indicate normal operation
 
 // Other definitions
-#define MOTOR_OFFSET      100   // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
-#define MOTOR_TIMEOUT     200   // Milliseconds to wait when an obstacle is found during motor movement before stopping the rotation
+#define MOTOR_OFFSET      30    // Define an offset of Encoder pulses to subtract from calibration to compensate for extra motor movement by inertia
+#define MOTOR_TIMEOUT     60    // Milliseconds to wait when an obstacle is found during motor movement before stopping the rotation
 #define SECURITY_TIMEOUT  3000  // Milliseconds to wait until the door is open after pushing the button, otherwise close or lock again
 #define CLOSE_WAIT        100   // Milliseconds to wait before starting the close direction
 #define LOCK_WAIT         2000  // Milliseconds to wait before locking the door
@@ -96,17 +96,15 @@ void StartMotor()
     
     Serial.println("Operation: LOCK");
     motor_direction = dirClose;
-    RequestedPulses = configuration.len_close;
-    if (digitalRead(PIN_J_NO_RELEASE) == LOW) 
-      RequestedPulses += configuration.len_release;
+    RequestedPulses = configuration.len_close - MOTOR_OFFSET;
+    if (CurrentMotorPosition == posReleased)
+        RequestedPulses -= configuration.len_release;
     break;
 
   case opUnlock:
     Serial.println("Operation: UNLOCK");
     motor_direction = dirOpen;
-    RequestedPulses = configuration.len_close;
-    if (digitalRead(PIN_J_NO_RELEASE) == LOW) 
-      RequestedPulses += configuration.len_release;
+    RequestedPulses = configuration.len_close + MOTOR_OFFSET;
     break;
   }
 
@@ -184,7 +182,7 @@ void StopByObstacle()
     return;
 
   case calClose:
-    configuration.len_close = MotorCounter - MOTOR_OFFSET;
+    configuration.len_close = MotorCounter;
     CalibrationStep = calFinish;
     DoCalibration();
     return;
